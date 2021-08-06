@@ -1,17 +1,36 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Circles {
     public partial class Form1 : Form {
+        private readonly CirclesController _circlesController;
+        private bool _isInitialized = false;
+
         public Form1() {
             InitializeComponent();
+            _circlesController = new CirclesController(this);
+        }
+
+        private void TimerTick(object sender, EventArgs e) {
+            _circlesController.Move();
+
+            pictureBox1.Invalidate();
+        }
+
+        private void pictureBox1_Paint(object sender, PaintEventArgs e) {
+            if (_isInitialized) {
+                _circlesController.RepaintAll(e.Graphics);
+            }
+
+            _isInitialized = true;
+        }
+
+        private void pictureBox1_MouseClick(object sender, MouseEventArgs e) {
+            _timer.Stop();
+            _circlesController.AddOrRemoveCircle(e);
+            pictureBox1.Invalidate();
+            _timer.Start();
         }
     }
 }
