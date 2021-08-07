@@ -9,11 +9,13 @@ namespace Circles {
 
         public Form1() {
             InitializeComponent();
-            _circlesController = new CirclesController(this);
+            _circlesController = new CirclesController(
+                ClientSize.Height - menuStrip1.Height,
+                ClientSize.Width);
         }
 
         private void TimerTick(object sender, EventArgs e) {
-            _circlesController.Move();
+            _circlesController.Move(smartToolStripMenuItem.Checked);
 
             pictureBox1.Invalidate();
         }
@@ -31,6 +33,14 @@ namespace Circles {
             _circlesController.AddOrRemoveCircle(e);
             pictureBox1.Invalidate();
             _timer.Start();
+        }
+
+        private void smartToolStripMenuItem_CheckedChanged(object sender, EventArgs e) {
+            defaultToolStripMenuItem.Checked = !smartToolStripMenuItem.Checked;
+        }
+
+        private void defaultToolStripMenuItem_CheckedChanged(object sender, EventArgs e) {
+            smartToolStripMenuItem.Checked = !defaultToolStripMenuItem.Checked;
         }
     }
 }

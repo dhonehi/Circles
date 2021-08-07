@@ -7,8 +7,9 @@ using System.Windows.Forms;
 namespace Circles {
     public class CirclesController {
         private List<Circle> _circles = new List<Circle>();
-        private readonly Form _context;
-        private Random _random = new Random();
+        private readonly Random _random = new Random();
+        private readonly int _windowHeight = 0;
+        private readonly int _windowWidth = 0;
 
         private void DrawCircle(Circle circle, Graphics graphics) {
             graphics.FillEllipse(
@@ -22,15 +23,15 @@ namespace Circles {
         private void Add(MouseEventArgs e) {
             float circleRadius = CircleConfig.Radius;
 
-            if (e.X <= circleRadius || e.X >= _context.ClientSize.Width - circleRadius ||
-                e.Y <= circleRadius || e.Y >= _context.ClientSize.Height - circleRadius) return;
+            if (e.X <= circleRadius || e.X >= _windowWidth - circleRadius ||
+                e.Y <= circleRadius || e.Y >= _windowHeight - circleRadius) return;
 
             _circles.Add(new Circle{
-                    X = e.X, Y = e.Y, Radius = CircleConfig.Radius,
-                    DeltaX = 2 * _random.Next(0, 2) * 2 - 1,
-                    DeltaY = 2 * _random.Next(0, 2) * 2 - 1,
-                    Color = GenerateColor()
-                });
+                X = e.X, Y = e.Y, Radius = CircleConfig.Radius,
+                DeltaX = 2 * _random.Next(0, 2) * 2 - 1,
+                DeltaY = 2 * _random.Next(0, 2) * 2 - 1,
+                Color = GenerateColor()
+            });
         }
 
         private SolidBrush GenerateColor() {
@@ -50,11 +51,11 @@ namespace Circles {
                     circleBoxRight = circle.X + circle.Radius,
                     circleBoxLeft = circle.X - circle.Radius;
 
-                if (circleBoxTop <= 0 || circleBoxBottom >= _context.ClientSize.Height) {
+                if (circleBoxTop <= 0 || circleBoxBottom >= _windowHeight) {
                     circle.DeltaY *= -1;
                 }
 
-                if (circleBoxLeft <= 0 || circleBoxRight >= _context.ClientSize.Width) {
+                if (circleBoxLeft <= 0 || circleBoxRight >= _windowWidth) {
                     circle.DeltaX *= -1;
                 }
             }
@@ -65,34 +66,42 @@ namespace Circles {
                    circle1.Radius + circle2.Radius;
         }
 
-        private void ProcessIntersectionWithCircles() {
+        private void ProcessIntersectionWithCircles(bool isSmartAlgo) {
             for (int i = 0; i < _circles.Count - 1; ++i) {
                 for (int j = i + 1; j < _circles.Count; ++j) {
                     Circle circle1 = _circles[i], circle2 = _circles[j];
 
                     if (IsIntersectCircles(circle1, circle2)) {
-                        double deltaX = circle1.X - circle2.X, deltaY = circle1.Y - circle2.Y;
-                        double alfa = Math.Atan2(deltaY, deltaX);
+                        if (isSmartAlgo) {
+                            double deltaX = circle1.X - circle2.X, deltaY = circle1.Y - circle2.Y;
+                            double alfa = Math.Atan2(deltaY, deltaX);
 
-                        double angle = Math.Atan2(circle2.DeltaY, circle2.DeltaX) - alfa,
-                            angleCircle = Math.Atan2(circle1.DeltaY, circle1.DeltaX) - alfa,
-                            mod = Math.Sqrt(circle2.DeltaX * circle2.DeltaX + circle2.DeltaY * circle2.DeltaY),
-                            modCircle = Math.Sqrt(circle1.DeltaX * circle1.DeltaX + circle1.DeltaY * circle1.DeltaY);
+                            double angle = Math.Atan2(circle2.DeltaY, circle2.DeltaX) - alfa,
+                                angleCircle = Math.Atan2(circle1.DeltaY, circle1.DeltaX) - alfa,
+                                mod = Math.Sqrt(circle2.DeltaX * circle2.DeltaX + circle2.DeltaY * circle2.DeltaY),
+                                modCircle = Math.Sqrt(circle1.DeltaX * circle1.DeltaX +
+                                                      circle1.DeltaY * circle1.DeltaY);
 
-                        double newDeltaX1 = mod * Math.Cos(angle),
-                            newDeltaY = mod * Math.Sin(angle),
-                            newDeltaX = modCircle * Math.Cos(angleCircle),
-                            newDeltaY1 = modCircle * Math.Sin(angleCircle);
+                            double newDeltaX1 = mod * Math.Cos(angle),
+                                newDeltaY = mod * Math.Sin(angle),
+                                newDeltaX = modCircle * Math.Cos(angleCircle),
+                                newDeltaY1 = modCircle * Math.Sin(angleCircle);
 
-                        angle = Math.Atan2(newDeltaY, newDeltaX) + alfa;
-                        angleCircle = Math.Atan2(newDeltaY1, newDeltaX1) + alfa;
-                        mod = Math.Sqrt(newDeltaX * newDeltaX + newDeltaY * newDeltaY);
-                        modCircle = Math.Sqrt(newDeltaX1 * newDeltaX1 + newDeltaY1 * newDeltaY1);
+                            angle = Math.Atan2(newDeltaY, newDeltaX) + alfa;
+                            angleCircle = Math.Atan2(newDeltaY1, newDeltaX1) + alfa;
+                            mod = Math.Sqrt(newDeltaX * newDeltaX + newDeltaY * newDeltaY);
+                            modCircle = Math.Sqrt(newDeltaX1 * newDeltaX1 + newDeltaY1 * newDeltaY1);
 
-                        circle2.DeltaX = (float) (mod * Math.Cos(angle));
-                        circle2.DeltaY = (float) (mod * Math.Sin(angle));
-                        circle1.DeltaX = (float) (modCircle * Math.Cos(angleCircle));
-                        circle1.DeltaY = (float) (modCircle * Math.Sin(angleCircle));
+                            circle2.DeltaX = (float) (mod * Math.Cos(angle));
+                            circle2.DeltaY = (float) (mod * Math.Sin(angle));
+                            circle1.DeltaX = (float) (modCircle * Math.Cos(angleCircle));
+                            circle1.DeltaY = (float) (modCircle * Math.Sin(angleCircle));
+                        } else {
+                            circle1.DeltaX *= -1;
+                            circle1.DeltaY *= -1;
+                            circle2.DeltaX *= -1;
+                            circle2.DeltaY *= -1;
+                        }
 
                         circle1.Color = GenerateColor();
                         circle2.Color = GenerateColor();
@@ -101,13 +110,12 @@ namespace Circles {
             }
         }
 
-        public CirclesController(Form context) {
-            _context = context;
+        public CirclesController(int windowHeight, int windowWidth) {
+            _windowHeight = windowHeight;
+            _windowWidth = windowWidth;
         }
 
         public void AddOrRemoveCircle(MouseEventArgs e) {
-            Random random = new Random();
-
             if (_circles.Count == 0) {
                 Add(e);
                 return;
@@ -133,10 +141,10 @@ namespace Circles {
             }
         }
 
-        public void Move() {
+        public void Move(bool isSmartAlgo) {
             if (_circles.Count == 0) return;
 
-            ProcessIntersectionWithCircles();
+            ProcessIntersectionWithCircles(isSmartAlgo);
             ProcessIntersectionWithBorder();
 
             foreach (var circle in _circles) {
